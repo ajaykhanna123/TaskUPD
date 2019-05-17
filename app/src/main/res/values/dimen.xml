@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="margin_login">10dp</dimen>
+    <dimen name="login_logo_height">150dp</dimen>
+    <dimen name="row_margin">5dp</dimen>
+    <dimen name="progBar_heightd">74dp</dimen>
+</resources>
