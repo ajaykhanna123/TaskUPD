@@ -1,6 +1,8 @@
 package chicmic.com.taskupd.dashboard
 
 import android.content.Intent
+import android.graphics.BitmapFactory
+import android.os.AsyncTask
 import android.os.Bundle
 import android.support.design.widget.NavigationView
 import android.support.v4.view.GravityCompat
@@ -16,8 +18,13 @@ import android.widget.TextView
 import chicmic.com.taskupd.R
 import chicmic.com.taskupd.callapi.APIClient
 import chicmic.com.taskupd.callapi.APIInterface
+import chicmic.com.taskupd.callapi.UserFetchListener
+import chicmic.com.taskupd.database.UserDatabase
 import chicmic.com.taskupd.datamodel.LoadData
 import chicmic.com.taskupd.datamodel.Search
+import chicmic.com.taskupd.datamodel.User
+import chicmic.com.taskupd.helper.Constants
+import chicmic.com.taskupd.helper.Utils
 import chicmic.com.taskupd.login.LogIn
 import chicmic.com.taskupd.responsemodel.CustomerData
 import chicmic.com.taskupd.responsemodel.Data
@@ -27,8 +34,10 @@ import kotlinx.android.synthetic.main.activity_dash_board.*
 import kotlinx.android.synthetic.main.app_bar_dash_board.*
 import retrofit2.Call
 import retrofit2.Response
+import java.net.URL
+import chicmic.com.taskupd.utils.*
+class DashBoard : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener,UserFetchListener {
 
-class DashBoard : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
     lateinit var mApiInterface: APIInterface
     lateinit var mAdapter:AdapterRecycleView
     lateinit var mAdapterSearch:AdapterRecycleView
@@ -42,11 +51,18 @@ class DashBoard : AppCompatActivity(), NavigationView.OnNavigationItemSelectedLi
     var mSearchIndex=0
     var mSearchRowCount:Int?=null
     var mSearchName:String=""
-    var mList= mutableListOf<CustomerData>()
+    private var mDatabase: UserDatabase? = null
+    var mManager:APIClient?=null
+
+
+    public var mList= mutableListOf<CustomerData>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dash_board)
         setSupportActionBar(toolbar)
+
+        mDatabase= UserDatabase(this)
 
         val toggle = ActionBarDrawerToggle(
                 this, drawer_layout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
@@ -63,8 +79,9 @@ class DashBoard : AppCompatActivity(), NavigationView.OnNavigationItemSelectedLi
         headerEmail!!.text=mEmail
 
 
-       loadData()
-        recyclerview.layoutManager= LinearLayoutManager(this, LinearLayout.VERTICAL,false) as RecyclerView.LayoutManager?
+        loadData()
+        recyclerview.layoutManager= LinearLayoutManager(this, LinearLayout.VERTICAL,false)
+                as RecyclerView.LayoutManager?
         recyclerview.setHasFixedSize(true)
         searchAdapterInit()
         listAdapterInit()
@@ -74,6 +91,17 @@ class DashBoard : AppCompatActivity(), NavigationView.OnNavigationItemSelectedLi
                       refresh()
         }
 
+
+    }
+    override fun onDeliverAllUsers(list: List<CustomerData>) {
+
+    }
+
+    override fun onDeliverUser(customerData: CustomerData) {
+        mAdapter.addUser(customerData)
+    }
+
+    override fun onHideDialog() {
 
     }
     fun searchAdapterInit()
@@ -91,8 +119,8 @@ class DashBoard : AppCompatActivity(), NavigationView.OnNavigationItemSelectedLi
         if(Const.checkInternet(this)) {
            mPageIndex=0
            mList.clear()
-          response()
-          mAdapter.notifyDataSetChanged()
+           response()
+           mAdapter.notifyDataSetChanged()
 
          }
 
@@ -100,14 +128,14 @@ class DashBoard : AppCompatActivity(), NavigationView.OnNavigationItemSelectedLi
     fun search(view: View)
     {
         searchbar.visibility=View.VISIBLE
-        searchbutton.visibility=View.GONE
+        //searchbutton.visibility=View.GONE
         swipeRefreshLayout.isEnabled=false
 
     }
     fun back(view: View)
     {
         searchbar.visibility=View.GONE
-        searchbutton.visibility=View.VISIBLE
+        //searchbutton.visibility=View.VISIBLE
         onBackPressed()
     }
     fun close(view: View)
@@ -175,6 +203,9 @@ class DashBoard : AppCompatActivity(), NavigationView.OnNavigationItemSelectedLi
             responseflag=false
             response()
         }
+        else {
+            getFeedFromDatabase()
+        }
     }
     fun response()
     {
@@ -184,37 +215,54 @@ class DashBoard : AppCompatActivity(), NavigationView.OnNavigationItemSelectedLi
             val obj = LoadData(mCustomerId!!, mPageIndex.toString(), mPageSize.toString())
             callData( mApiInterface.listLoad(obj))
         }
-        else{
-            val obj = Search(mCustomerId!!, mPageIndex.toString(), mPageSize.toString(),mSearchName)
-            callData( mApiInterface.search(obj))
-        }
+//        else{
+//            val obj = Search(mCustomerId!!, mPageIndex.toString(), mPageSize.toString(),mSearchName)
+//            callData( mApiInterface.search(obj))
+//        }
 
 
     }
     fun callData(call: Call<ListData>)
     {
+
         call.enqueue(object : retrofit2.Callback<ListData> {
 
             override fun onResponse(call: Call<ListData>?, response: Response<ListData>?) {
                 val listData = response!!.body()
                 if (listData.message == Const.LIST_MESSAGE && listData.status == Const.LIST_STATUS) {
 
+
                     Log.d("List_response_success", listData.message)
                     var data: Data = listData.data
-                    if(mSearch)
-                    {
-                        mSearchRowCount= data.rowCount
-                        mSearchList.addAll(data.customerData)
-                        mAdapterSearch.notifyDataSetChanged()
-                        mSearchIndex=mSearchIndex+10
-                    }
-                    else
-                    {
+//                    if(mSearch)
+//                    {
+//                        mSearchRowCount= data.rowCount
+//                        mSearchList.addAll(data.customerData)
+//                        mAdapterSearch.notifyDataSetChanged()
+//                        mSearchIndex=mSearchIndex+10
+//                    }
+                    //else
+                   // {
                         mRowCount = data.rowCount
                         mList.addAll(data.customerData)
                         mAdapter.notifyDataSetChanged()
                         mPageIndex = mPageIndex + 10
+                   // val task = SaveIntoDatabase()
+
+                    var customerList=data.customerData
+
+                    for (i in customerList.indices) {
+                        val customer = customerList.get(i)
+                        mDatabase?.addUser(customer)
+
+//                        val task = SaveIntoDatabase()
+//                        task.execute(customer)
+
+                        mAdapter.addUser(customer)
                     }
+
+
+                   // }
 
                     progressBar.visibility = View.GONE
                     isLoading = false
@@ -273,6 +321,36 @@ fun checkLimit():Boolean
         {
             isLoading = true
         }
+    }
+//    inner class SaveIntoDatabase : AsyncTask<CustomerData, Void, Void>() {
+//
+//
+//        private val TAG = SaveIntoDatabase::class.java.simpleName
+//
+//        override fun onPreExecute() {
+//            super.onPreExecute()
+//        }
+//
+//        override fun doInBackground(vararg params: CustomerData): Void? {
+//
+//            val user = params[0]
+//
+//            try {
+//
+//
+//                mDatabase!!.addUser(user)
+//
+//            } catch (e: Exception) {
+//                Log.d(TAG, e.message)
+//            }
+//
+//            return null
+//        }
+//    }
+
+    private fun getFeedFromDatabase() {
+
+        mList= mDatabase?.users as MutableList<CustomerData>
     }
 
 

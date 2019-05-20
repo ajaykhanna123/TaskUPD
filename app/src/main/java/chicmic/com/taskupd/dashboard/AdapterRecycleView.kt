@@ -14,6 +14,7 @@ class AdapterRecycleView (private val myDataset: MutableList<CustomerData>) : Re
 
 
 
+
     class ViewHolder(itemView: View?) : RecyclerView.ViewHolder(itemView) {
 
         val name=itemView!!.findViewById<TextView>(R.id.name)
@@ -38,6 +39,10 @@ class AdapterRecycleView (private val myDataset: MutableList<CustomerData>) : Re
     override fun getItemCount(): Int {
         return myDataset.size
         Log.d("bind","size")
+    }
+    fun addUser(customerData: CustomerData) {
+        myDataset.add(customerData)
+        notifyDataSetChanged()
     }
 
 

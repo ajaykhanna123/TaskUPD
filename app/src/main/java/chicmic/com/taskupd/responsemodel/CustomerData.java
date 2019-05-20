@@ -20,7 +20,28 @@ public class CustomerData {
     public String email;
     @SerializedName("finger_data")
     public List<FingerData> fingerData ;
+    private boolean isFromDatabase;
 
+    public String getId() {
+        return id;
+    }
 
+    public void setId(String id) {
+        this.id = id;
+    }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+    public boolean isFromDatabase() {
+        return isFromDatabase;
+    }
+
+    public void setFromDatabase(boolean fromDatabase) {
+        isFromDatabase = fromDatabase;
+    }
 }

@@ -16,7 +16,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/darkBlue"
+            android:background="@color/colorPrimaryDark"
             app:popupTheme="@style/AppTheme.PopupOverlay" >
             <LinearLayout
                 android:id="@+id/searchbar"
@@ -45,15 +45,15 @@
                     android:onClick="close"
                     android:src="@drawable/closebtn"/>
             </LinearLayout>
-            <ImageView
-                android:id="@+id/searchbutton"
-                android:padding="7dp"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_gravity="end"
-                android:onClick="search"
-                android:src="@drawable/searchbtn"
-                />
+            <!--<ImageView-->
+                <!--android:id="@+id/searchbutton"-->
+                <!--android:padding="7dp"-->
+                <!--android:layout_width="wrap_content"-->
+                <!--android:layout_height="match_parent"-->
+                <!--android:layout_gravity="end"-->
+                <!--android:onClick="search"-->
+                <!--android:src="@drawable/searchbtn"-->
+                <!--/>-->
         </android.support.v7.widget.Toolbar>
 
     </android.support.design.widget.AppBarLayout>

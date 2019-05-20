@@ -30,6 +30,7 @@ dependencies {
     implementation 'com.android.support:recyclerview-v7:26.1.0'
     implementation "com.android.support:support-core-utils:26.1.0"
     implementation 'com.android.support:cardview-v7:26.1.0'
+    compile 'com.facebook.stetho:stetho-okhttp3:1.5.1'
     implementation 'com.android.support:design:26.1.0'
     compile('com.squareup.retrofit2:retrofit:2.1.0') {
         // exclude Retrofit’s OkHttp dependency module and define your own module import

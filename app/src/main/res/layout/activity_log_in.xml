@@ -17,13 +17,8 @@
    <ImageView
        android:layout_width="match_parent"
        android:layout_height="@dimen/login_logo_height"
-       android:src="@drawable/loggoo"/>
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/login_text"
-        android:textColor="@color/darkBlue"
-        android:gravity="center"/>
+       android:src="@drawable/upaid"/>
+
 
     <EditText
         android:id="@+id/email"
