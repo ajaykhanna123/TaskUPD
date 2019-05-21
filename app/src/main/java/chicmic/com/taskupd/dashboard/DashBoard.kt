@@ -54,6 +54,9 @@ class DashBoard : AppCompatActivity(), NavigationView.OnNavigationItemSelectedLi
     private var mDatabase: UserDatabase? = null
     var mManager:APIClient?=null
 
+    var isLoading=false
+    var responseflag=false
+
 
     public var mList= mutableListOf<CustomerData>()
 
@@ -62,7 +65,7 @@ class DashBoard : AppCompatActivity(), NavigationView.OnNavigationItemSelectedLi
         setContentView(R.layout.activity_dash_board)
         setSupportActionBar(toolbar)
 
-        mDatabase= UserDatabase(this)
+        mDatabase = UserDatabase(this)
 
         val toggle = ActionBarDrawerToggle(
                 this, drawer_layout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
@@ -74,22 +77,40 @@ class DashBoard : AppCompatActivity(), NavigationView.OnNavigationItemSelectedLi
         mApiInterface = APIClient.getClient().create(APIInterface::class.java)
         getLogin()
         nav_view.getHeaderView(0)
-        val header=nav_view.getHeaderView(0)
-        val headerEmail=header.findViewById<TextView>(R.id.header_email)
-        headerEmail!!.text=mEmail
+        val header = nav_view.getHeaderView(0)
+        val headerEmail = header.findViewById<TextView>(R.id.header_email)
+        headerEmail!!.text = mEmail
 
 
         loadData()
-        recyclerview.layoutManager= LinearLayoutManager(this, LinearLayout.VERTICAL,false)
+        recyclerview.layoutManager = LinearLayoutManager(this, LinearLayout.VERTICAL, false)
                 as RecyclerView.LayoutManager?
         recyclerview.setHasFixedSize(true)
         searchAdapterInit()
         listAdapterInit()
 
         initScrollListener()
-        swipeRefreshLayout.setOnRefreshListener{
-                      refresh()
-        }
+
+
+        swipeRefreshLayout.setOnRefreshListener {
+            if(!Const.checkInternet(this))
+            {
+                swipeRefreshLayout.isRefreshing=false
+                isLoading=true
+                responseflag=true
+
+            }
+            else
+            {
+               swipeRefreshLayout.isRefreshing=true
+                refresh()
+                isLoading=true
+                responseflag=true
+            }
+
+    }
+
+
 
 
     }
@@ -121,6 +142,7 @@ class DashBoard : AppCompatActivity(), NavigationView.OnNavigationItemSelectedLi
            mList.clear()
            response()
            mAdapter.notifyDataSetChanged()
+
 
          }
 
@@ -200,26 +222,50 @@ class DashBoard : AppCompatActivity(), NavigationView.OnNavigationItemSelectedLi
         // var index=checkIndex(mPageIndex)
         progressBar.visibility= View.VISIBLE
         if(Const.checkInternet(this)) {
-            responseflag=false
+            responseflag=true
+            isLoading=true
             response()
+
         }
         else {
+            progressBar.visibility = View.GONE
+            isLoading = false
+
+
+            //swipeRefreshLayout.setOnRefreshListener { swipeRefreshLayout.isRefreshing=false }
+            //swipeRefreshLayout.visibility=View.GONE
+
+
             getFeedFromDatabase()
+
         }
     }
     fun response()
     {
 
-        if (!mSearch)
-        {
+
+//        if (!mSearch)
+//        {
             val obj = LoadData(mCustomerId!!, mPageIndex.toString(), mPageSize.toString())
             callData( mApiInterface.listLoad(obj))
-        }
+        //}
 //        else{
 //            val obj = Search(mCustomerId!!, mPageIndex.toString(), mPageSize.toString(),mSearchName)
 //            callData( mApiInterface.search(obj))
 //        }
 
+//        swipeRefreshLayout.setOnRefreshListener {
+//            if (!Utils.isNetworkAvailable(this)) {
+//                swipeRefreshLayout.isRefreshing = false
+//            }
+//
+//            else
+//            {
+//
+//                swipeRefreshLayout.isRefreshing = true
+//                refresh()
+//            }
+//        }
 
     }
     fun callData(call: Call<ListData>)
@@ -230,7 +276,6 @@ class DashBoard : AppCompatActivity(), NavigationView.OnNavigationItemSelectedLi
             override fun onResponse(call: Call<ListData>?, response: Response<ListData>?) {
                 val listData = response!!.body()
                 if (listData.message == Const.LIST_MESSAGE && listData.status == Const.LIST_STATUS) {
-
 
                     Log.d("List_response_success", listData.message)
                     var data: Data = listData.data
@@ -253,17 +298,17 @@ class DashBoard : AppCompatActivity(), NavigationView.OnNavigationItemSelectedLi
 
                     for (i in customerList.indices) {
                         val customer = customerList.get(i)
+
                         mDatabase?.addUser(customer)
 
 //                        val task = SaveIntoDatabase()
 //                        task.execute(customer)
 
-                        mAdapter.addUser(customer)
+                       // mAdapter.addUser(customer)
                     }
 
 
                    // }
-
                     progressBar.visibility = View.GONE
                     isLoading = false
                     responseflag = true
@@ -290,8 +335,7 @@ fun checkLimit():Boolean
 }
 
 
-    var isLoading=false
-    var responseflag=false
+
 
 
     private fun initScrollListener() {
@@ -311,15 +355,17 @@ fun checkLimit():Boolean
     fun loading()
     {
         val linearLayoutManager = recyclerview.layoutManager as LinearLayoutManager
-        if (isLoading&&responseflag&&checkLimit())
+        if (isLoading && responseflag && checkLimit())
         {
             loadData()
+
             isLoading =false
 
         }
         else if (linearLayoutManager != null && linearLayoutManager.findLastCompletelyVisibleItemPosition() == mList.size - 1)
         {
             isLoading = true
+            responseflag=true
         }
     }
 //    inner class SaveIntoDatabase : AsyncTask<CustomerData, Void, Void>() {

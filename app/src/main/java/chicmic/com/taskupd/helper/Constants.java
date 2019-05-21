@@ -11,18 +11,14 @@
 
 package chicmic.com.taskupd.helper;
 
-/**
- * @author Filippo Engidashet
- * @version 1.0
- * @date today
- */
+
 public class Constants {
 
 
     public static final  String BASE_URL="https://updurns.com/api/";
     public static final class DATABASE {
 
-        public static final String DB_NAME = "user";
+        public static final String DB_NAME = "user.db";
         public static final int DB_VERSION = 1;
         public static final String TABLE_NAME = "user";
         public static final String COLUMN_ID= "id";
@@ -32,14 +28,14 @@ public class Constants {
 
         public static final String DROP_QUERY = "DROP TABLE IF EXISTS " + TABLE_NAME;
 
-        public static final String GET_USER_QUERY = "SELECT * FROM " + TABLE_NAME;
+        public static final String GET_USER_QUERY = "select  * from " + TABLE_NAME;
 
 
 
 
-        public static final String CREATE_TABLE_QUERY = "CREATE TABLE " + TABLE_NAME + "" +
-                "(" + COLUMN_ID + " INTEGER PRIMARY KEY not null," +
-                COLUMN_NAME + " TEXT not null," +
+        public static final String CREATE_TABLE_QUERY = "create table if not exists " + TABLE_NAME + "" +
+                "(" + COLUMN_ID + " TEXT unique," +
+                COLUMN_NAME + " TEXT not null" +
                 ");";
     }
 

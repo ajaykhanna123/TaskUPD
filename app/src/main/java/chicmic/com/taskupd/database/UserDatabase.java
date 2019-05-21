@@ -43,8 +43,32 @@ public class UserDatabase extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL(Constants.DATABASE.DROP_QUERY);
-        this.onCreate(db);
+        onCreate(db);
     }
+
+    public int checkIfIdExists(String userid) {
+        Cursor c = null;
+        SQLiteDatabase db=null;
+        try {
+            db = this.getReadableDatabase();
+            String query = "select count(*) from "+Constants.DATABASE.TABLE_NAME+ " where id = ?";
+            c = db.rawQuery(query,new String[] {userid});
+            if (c.moveToFirst()) {
+                return c.getInt(0);
+            }
+            return 0;
+        }
+        finally {
+            if (c != null) {
+                c.close();
+            }
+            if (db != null) {
+                db.close();
+            }
+        }
+    }
+
+
 
     public void addUser(CustomerData customerData) {
 
@@ -56,18 +80,27 @@ public class UserDatabase extends SQLiteOpenHelper {
         values.put(Constants.DATABASE.COLUMN_NAME, customerData.name);
 
         try {
+            //if(checkIfIdExists(customerData.id)==0)
+           // {
+                db.insert("user", null, values);
+           // }
+           // else
+          // {
+                Log.d("inserta","value exists");
+           // }
            // db.insert(Constants.DATABASE.TABLE_NAME, null, values);
-            db.insert("user", null, values);
-        } catch (Exception e) {
 
+        } catch (Exception e) {
+                Log.d("insert",e.getMessage());
         }
         db.close();
     }
     public List<CustomerData> getUsers()
     {
-         SQLiteDatabase mDb =this.getReadableDatabase();
+         SQLiteDatabase mDb =this.getWritableDatabase();
        // Cursor cursor = mDb.rawQuery(Constants.DATABASE.GET_USER_QUERY, null);
-        Cursor cursor = mDb.rawQuery("select * from user",null);
+
+        Cursor cursor = mDb.rawQuery(Constants.DATABASE.GET_USER_QUERY,null);
 
         final List<CustomerData> usersList = new ArrayList<>();
         try {
@@ -94,6 +127,12 @@ public class UserDatabase extends SQLiteOpenHelper {
         mDb.close();
 
         return usersList;
+    }
+    public void deleteUsers()
+    {
+        SQLiteDatabase mDb =this.getWritableDatabase();
+        String DELETE_QUERY="delete from "+Constants.DATABASE.TABLE_NAME;
+        mDb.execSQL(DELETE_QUERY);
     }
 
 //    public void fetchUsers(UserFetchListener listener) {
